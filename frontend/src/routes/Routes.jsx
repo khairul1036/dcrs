@@ -13,6 +13,10 @@ import ManageDatasets from "../pages/experimental-data/manage-datasets/ManageDat
 import ExploreDatasets from "../pages/experimental-data/explore-datasets/ExploreDatasets";
 import EditDataset from "../pages/experimental-data/edit-dataset/EditDataset";
 import About from "../pages/about/About";
+import DataAccessRequests from "../pages/settings/data-access-requests/DataAccessRequests";
+import UpdatePassword from "../pages/settings/update-password/UpdatePassword";
+import Roles from "../pages/settings/roles/Roles";
+import RolePermission from "../pages/settings/role-permission/RolePermission";
 
 const router = createBrowserRouter([
     {
@@ -76,6 +80,22 @@ const router = createBrowserRouter([
             {
                 path: "/change-user-details",
                 element: <ChangeUserDetails />
+            },
+            {
+                path: "/data-access-requests",
+                element: <DataAccessRequests />
+            },
+            {
+                path: "/update-password",
+                element: <UpdatePassword />
+            },
+            {
+                path: "/roles",
+                element: <Roles />
+            },
+            {
+                path: "/role-permission",
+                element: <RolePermission />
             },
             {
                 path: "/profile",
