@@ -12,6 +12,7 @@ import CreateDataset from "../pages/experimental-data/create-dataset/CreateDatas
 import ManageDatasets from "../pages/experimental-data/manage-datasets/ManageDatasets";
 import ExploreDatasets from "../pages/experimental-data/explore-datasets/ExploreDatasets";
 import EditDataset from "../pages/experimental-data/edit-dataset/EditDataset";
+import About from "../pages/about/About";
 
 const router = createBrowserRouter([
     {
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
 
 
 
+            {
+                path: "/about",
+                element: <About />
+            },
             {
                 path: "/user-approval",
                 element: <UserApproval />
