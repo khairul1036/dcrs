@@ -17,6 +17,8 @@ import DataAccessRequests from "../pages/settings/data-access-requests/DataAcces
 import UpdatePassword from "../pages/settings/update-password/UpdatePassword";
 import Roles from "../pages/settings/roles/Roles";
 import RolePermission from "../pages/settings/role-permission/RolePermission";
+import SurveyResponses from "../pages/data-visualization/view-survey-responses/SurveyResponses";
+import ViewSurveyResponse from "../pages/data-visualization/view-survey-responses/ViewSurveyResponse";
 
 const router = createBrowserRouter([
     {
@@ -58,6 +60,14 @@ const router = createBrowserRouter([
             {
                 path: "/dataset/edit/:id",
                 element: <EditDataset />
+            },
+            {
+                path: "/survey-responses",
+                element: <SurveyResponses />
+            },
+            {
+                path: "/survey-response/:id",
+                element: <ViewSurveyResponse />
             },
 
 
