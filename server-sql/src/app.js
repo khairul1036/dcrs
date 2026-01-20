@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { pool, checkConnection } from './config/db.js';
 import createAllTables from './utils/dbUtils.js';
+import routes from './routes/index.js';
 
 dotenv.config();
 const app = express();
@@ -12,7 +13,10 @@ const PORT = process.env.SERVER_PORT || 5000;
 app.use(express.json());
 
 
-app.get('/', (req, res) => {
+app.use("/api/v1", routes);
+
+
+app.get('/health', (req, res) => {
     res.send({ status: 'success', message: 'Welcome to the SQL Database Server!' });
 });
 
