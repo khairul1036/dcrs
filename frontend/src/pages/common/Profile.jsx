@@ -1,22 +1,28 @@
 import React, { useState } from "react";
+import { useAuth } from "../../providers/AuthProvider";
+import useAxiosSecure from "../../hook/useAxiosSecure";
+import Swal from "sweetalert2";
 
 const Profile = () => {
+    const { user } = useAuth();
+    const axiosSecure = useAxiosSecure();
+
     const [formData, setFormData] = useState({
-        name: "faysal",
-        username: "01637463845",
-        email: "info@faysal.com",
-        whatsapp: "01736485765",
-        designation: "saao",
-        division: "agromet",
+        name: user.user?.name,
+        username: user.user?.username,
+        email: user.user?.email,
+        whatsapp: user.user?.whatsapp,
+        designation: user.user?.designation,
+        division: user.user?.division,
         hotspots: ["River", "Haor", "Coastal", "Barind"],
-        region: "",
-        locationDivision: "",
-        district: "",
-        upazila: "",
-        unionName: "",
-        block: "",
-        latitude: "23.992934",
-        longitude: "90.407587",
+        region: user.user?.region,
+        locationDivision: user.user?.locationDivision,
+        district: user.user?.district,
+        upazila: user.user?.upazila,
+        unionName: user.user?.unionName,
+        block: user.user?.block,
+        latitude: user.user?.latitude,
+        longitude: user.user?.longitude,
     });
 
     const handleChange = (e) => {
@@ -31,10 +37,29 @@ const Profile = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Form Data:", formData);
-        // API call here
+
+        try {
+            const res = await axiosSecure.put(`/user/profile`, formData);
+
+            if (res.data) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Updated!",
+                    text: "Your information has been updated successfully.",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        } catch (error) {
+            console.error("Update Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Update Failed",
+                text: error.response?.data?.message || "Something went wrong while updating!",
+            });
+        }
     };
 
     return (
@@ -342,7 +367,7 @@ const Profile = () => {
                                         </label>
                                         <div className="w-full p-3 rounded-lg border border-gray-300 bg-gray-50">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                approved
+                                                {user.user?.status}
                                             </span>
                                         </div>
                                     </div>
@@ -353,7 +378,7 @@ const Profile = () => {
                                         </label>
                                         <div className="w-full p-3 rounded-lg border border-gray-300 bg-gray-50">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                user
+                                                {user.user?.role}
                                             </span>
                                         </div>
                                     </div>
