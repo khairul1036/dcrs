@@ -1,10 +1,11 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { pool } from "../config/db.js";
-import UserModel from "../models/users.model.js";
+import { userRegistrationEmail } from "../utils/email/emailTemplates.js";
+import { sendEmail } from "../utils/email/emailSender.js";
+import { generatePassword, hashPassword } from "../utils/passwordUtils.js";
+import { generateToken } from "../utils/jwt.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1d";
 
 // Register
 export const register = async (req, res) => {
@@ -12,61 +13,91 @@ export const register = async (req, res) => {
         const { name, phoneNumber, email, designation, division, whatsapp } = req.body;
 
         if (!name || !email || !phoneNumber) {
-            return res.status(400).json({ message: "Name, email, and phone number are required" });
+            return res.status(400).json({
+                message: "Name, email, and phone number are required",
+            });
         }
 
-        // --- Generate username from email ---
-        let username = email.split("@")[0];
-        let tempUsername = username;
+        // -------- Generate unique username --------
+        const baseUsername = email.split("@")[0];
+        let username = baseUsername;
         let counter = 1;
 
         while (true) {
-            const [existing] = await pool.query("SELECT * FROM users WHERE username = ?", [tempUsername]);
-            if (existing.length === 0) break;
-            tempUsername = username + counter;
-            counter++;
+            const [exists] = await pool.query(
+                "SELECT id FROM users WHERE username = ?",
+                [username]
+            );
+            if (exists.length === 0) break;
+            username = `${baseUsername}${counter++}`;
         }
-        username = tempUsername;
 
-        // --- Check if email already exists ---
-        const [existingEmail] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-        if (existingEmail.length > 0) {
+        // -------- Check email --------
+        const [emailExists] = await pool.query(
+            "SELECT id FROM users WHERE email = ?",
+            [email]
+        );
+        if (emailExists.length > 0) {
             return res.status(400).json({ message: "Email already exists" });
         }
 
-        // --- Insert into database ---
+        // -------- Password --------
+        const plainPassword = generatePassword();
+        const hashedPassword = await hashPassword(plainPassword);
+
+        // -------- Insert user --------
         const query = `
-      INSERT INTO users 
-      (username, name, phoneNumber, email, designation, division, whatsapp)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
+            INSERT INTO users
+            (username, name, phoneNumber, email, password, role, designation, division, whatsapp, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
         const values = [
             username,
             name,
             phoneNumber,
             email,
+            hashedPassword,
+            "user",
             designation || null,
             division || null,
             whatsapp || null,
+            "pending",
         ];
 
         const [result] = await pool.query(query, values);
 
-        // --- Prepare response ---
-        const newUser = {
-            id: result.insertId,
-            username,
+        // -------- Send email --------
+        const emailHTML = userRegistrationEmail({
             name,
-            phoneNumber: phoneNumber,
+            username,
+            password: plainPassword,
             email,
-            designation: designation || null,
-            division: division || null,
-            whatsapp: whatsapp || null,
-        };
+            phoneNumber,
+        });
 
-        res.status(201).json({ message: "User registered successfully", user: newUser });
+        await sendEmail({
+            to: email,
+            subject: "Your Account Login Credentials",
+            html: emailHTML,
+        });
+
+        // -------- Response --------
+        res.status(201).json({
+            message: "User registered successfully. Credentials sent via email.",
+            user: {
+                id: result.insertId,
+                username,
+                name,
+                phoneNumber,
+                email,
+                designation,
+                division,
+                whatsapp,
+            },
+        });
     } catch (error) {
-        console.error(error);
+        console.error("REGISTER ERROR:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -74,30 +105,52 @@ export const register = async (req, res) => {
 // Login
 export const login = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { phoneNumber, password } = req.body;
 
-        // Find user by username
-        const [rows] = await pool.query("SELECT * FROM users WHERE username = ?", [username]);
-        const user = rows[0];
-        if (!user) return res.status(400).json({ message: "Invalid username or password" });
+        if (!phoneNumber || !password) {
+            return res.status(400).json({
+                message: "Phone number and password are required",
+            });
+        }
 
-        // Compare password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(400).json({ message: "Invalid username or password" });
-
-        // Generate JWT
-        const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
+        // -------- Find user by phone number --------
+        const [rows] = await pool.query(
+            "SELECT * FROM users WHERE phoneNumber = ?",
+            [phoneNumber]
         );
 
-        // Remove password before sending response
+        const user = rows[0];
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid phone number",
+            });
+        }
+
+        // -------- Compare password --------
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({
+                message: "Invalid password",
+            });
+        }
+
+        // -------- Generate JWT --------
+        const token = generateToken({
+            id: user.id,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+        });
+
+        // -------- Remove sensitive data --------
         delete user.password;
 
-        res.json({ message: "Login successful", user, token });
+        res.status(200).json({
+            message: "Login successful",
+            token,
+            user,
+        });
     } catch (error) {
-        console.error(error);
+        console.error("LOGIN ERROR:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };

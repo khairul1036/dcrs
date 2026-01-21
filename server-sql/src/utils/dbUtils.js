@@ -9,7 +9,7 @@ const userTableQuery = `
         phoneNumber VARCHAR(20) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL,
-        roleId INT DEFAULT 2,
+        roleId INT NOT NULL,
         designation VARCHAR(100),
         division VARCHAR(50),
         district VARCHAR(50),
