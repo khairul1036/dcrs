@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { pool } from "../config/db.js";
 import { userRegistrationEmail } from "../utils/email/emailTemplates.js";
@@ -151,6 +150,47 @@ export const login = async (req, res) => {
         });
     } catch (error) {
         console.error("LOGIN ERROR:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Update Password
+export const updatePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword, confirmPassword } = req.body;
+        const userId = req.user.id; // JWT middleware থেকে user id পাবে
+
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: "New password and confirm password do not match" });
+        }
+
+        // -------- Fetch user --------
+        const [rows] = await pool.query("SELECT password FROM users WHERE id = ?", [userId]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const user = rows[0];
+
+        // -------- Check old password --------
+        const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+        if (!isOldPasswordValid) {
+            return res.status(400).json({ message: "Old password is incorrect" });
+        }
+
+        // -------- Hash new password --------
+        const hashedNewPassword = await hashPassword(newPassword);
+
+        // -------- Update DB --------
+        await pool.query("UPDATE users SET password = ? WHERE id = ?", [hashedNewPassword, userId]);
+
+        res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        console.error("UPDATE PASSWORD ERROR:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
