@@ -1,4 +1,10 @@
+import { useNavigate } from "react-router";
+import { useAuth } from "../../providers/AuthProvider";
+import Swal from "sweetalert2";
+
 const Login = () => {
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -6,9 +12,29 @@ const Login = () => {
         const phoneNumber = form.phoneNumber.value;
         const password = form.password.value;
 
-        console.log({ phoneNumber, password })
+        try {
+            const result = await login({ phoneNumber, password });
 
-    }
+            if (result) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Successful',
+                    text: 'Welcome back!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                navigate("/");
+            }
+        } catch (error) {
+            console.error("Login Error:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: error.response?.data?.message || "Invalid phone number or password!",
+            });
+        }
+    };
 
     return (
         <div

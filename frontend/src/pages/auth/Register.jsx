@@ -1,4 +1,10 @@
+import Swal from "sweetalert2";
+import { useAuth } from "../../providers/AuthProvider";
+import { useNavigate } from "react-router";
+
 const Register = () => {
+    const { register } = useAuth();
+    const navigate = useNavigate();
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -8,11 +14,38 @@ const Register = () => {
         const phoneNumber = form.phoneNumber.value;
         const designation = form.designation.value;
         const division = form.division.value;
-        const whatsAppNumber = form.whatsAppNumber.value;
+        const whatsapp = form.whatsAppNumber.value;
 
-        console.log({ name, email, phoneNumber, designation, division, whatsAppNumber })
+        const formData = { name, email, phoneNumber, designation, division, whatsapp };
 
-    }
+        try {
+            const result = await register(formData);
+
+            if (result) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Registration Successful!',
+                    text: 'Please check your email to get your password.',
+                    confirmButtonText: 'Go to Login',
+                    confirmButtonColor: '#0d9488',
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        navigate('/login');
+                    }
+                });
+
+                form.reset();
+            }
+        } catch (error) {
+            console.error("Registration Error:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Registration Failed',
+                text: error.response?.data?.message || "Something went wrong! Please try again.",
+            });
+        }
+    };
+
 
     return (
         <div

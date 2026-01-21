@@ -22,8 +22,10 @@ import {
     FaBug,
     FaLeaf,
 } from "react-icons/fa";
+import { useAuth } from "../../providers/AuthProvider";
 
 const Sidebar = () => {
+    const { logout } = useAuth();
     const [openMenu, setOpenMenu] = useState(null);
 
     const toggleMenu = (menu) => {
@@ -244,7 +246,7 @@ const Sidebar = () => {
 
             {/* Logout */}
             <div className="px-4 py-4">
-                <button className="flex items-center gap-3 text-red-300 hover:text-white w-full">
+                <button onClick={logout} className="cursor-pointer flex items-center gap-3 text-red-300 hover:text-white w-full">
                     <MdLogout className="w-5 h-5" />
                     Log out
                 </button>

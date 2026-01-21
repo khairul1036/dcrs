@@ -19,6 +19,7 @@ import Roles from "../pages/settings/roles/Roles";
 import RolePermission from "../pages/settings/role-permission/RolePermission";
 import SurveyResponses from "../pages/data-visualization/view-survey-responses/SurveyResponses";
 import ViewSurveyResponse from "../pages/data-visualization/view-survey-responses/ViewSurveyResponse";
+import PrivateRoute from "./PrivateRoute";
 
 const router = createBrowserRouter([
     {
@@ -31,7 +32,7 @@ const router = createBrowserRouter([
     },
     {
         path: "/",
-        element: <DashboardLayout />,
+        element: <PrivateRoute><DashboardLayout /></PrivateRoute>,
         children: [
             {
                 index: true,
