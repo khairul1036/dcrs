@@ -139,6 +139,13 @@ export const login = async (req, res) => {
             });
         }
 
+        // -------- Check if user is approved --------
+        if (user.status !== "approved") {
+            return res.status(403).json({
+                message: "Your account is not approved yet. Please wait for approval.",
+            });
+        }
+
         // -------- Compare password --------
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
