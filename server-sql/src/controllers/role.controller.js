@@ -99,14 +99,26 @@ export const updateRole = async (req, res) => {
             return res.status(400).json({ message: "Role name is required" });
         }
 
+        // -------- Fetch the current role --------
+        const [rows] = await pool.query("SELECT name FROM roles WHERE id = ?", [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Role not found" });
+        }
+
+        const currentRoleName = rows[0].name.toLowerCase();
+
+        // -------- Prevent updating 'admin' or 'user' roles --------
+        if (currentRoleName === "admin" || currentRoleName === "user") {
+            return res.status(403).json({
+                message: `Cannot update the '${currentRoleName}' role`
+            });
+        }
+
+        // -------- Update role --------
         const [result] = await pool.query(
             "UPDATE roles SET name = ? WHERE id = ?",
             [name, id]
         );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Role not found" });
-        }
 
         res.status(200).json({
             message: "Role updated successfully",
@@ -116,6 +128,7 @@ export const updateRole = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
 
 /**
  * @desc    Delete role
