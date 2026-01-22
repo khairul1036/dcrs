@@ -1,20 +1,51 @@
 import React, { useState } from "react";
+import Swal from "sweetalert2";
+import useAxiosSecure from "../../../hook/useAxiosSecure";
 
 const UpdatePassword = () => {
+    const axiosSecure = useAxiosSecure();
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
         if (newPassword !== confirmPassword) {
-            alert("New passwords do not match!");
+            Swal.fire({
+                icon: "warning",
+                title: "Match Error",
+                text: "New passwords do not match!",
+            });
             return;
         }
-        alert("Password updated successfully!");
-        setOldPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
+
+        try {
+            const response = await axiosSecure.put("/auth/update-password", {
+                oldPassword,
+                newPassword,
+                confirmPassword
+            });
+
+            if (response.status === 200) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Password updated successfully",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+
+                setOldPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: "error",
+                title: "Update Failed",
+                text: error.response?.data?.message || "Something went wrong!",
+            });
+        }
     };
 
     return (

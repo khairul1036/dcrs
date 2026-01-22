@@ -44,11 +44,22 @@ export const register = async (req, res) => {
         const plainPassword = generatePassword();
         const hashedPassword = await hashPassword(plainPassword);
 
-        // -------- Insert user --------
+
+
+        // Fetch the 'user' role id
+        const [roleRows] = await pool.query(
+            "SELECT id FROM roles WHERE name = 'user'"
+        );
+        if (roleRows.length === 0) {
+            return res.status(500).json({ message: "Default user role not found" });
+        }
+        const roleId = roleRows[0].id;
+
+        // Insert user with roleId
         const query = `
             INSERT INTO users
-            (username, name, phoneNumber, email, password, role, designation, division, whatsapp, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (username, name, phoneNumber, email, password, role, roleId, designation, division, whatsapp, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const values = [
@@ -58,11 +69,14 @@ export const register = async (req, res) => {
             email,
             hashedPassword,
             "user",
+            roleId,
             designation || null,
             division || null,
             whatsapp || null,
             "pending",
         ];
+
+
 
         const [result] = await pool.query(query, values);
 
