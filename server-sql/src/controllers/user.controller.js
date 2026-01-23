@@ -139,8 +139,9 @@ export const updateUserProfile = async (req, res) => {
 // Update User Approval Status
 export const updateUserApprovalStatus = async (req, res) => {
     try {
-        const { id } = req.params;              // user id
-        const { status } = req.body;           // approved / rejected / blocked
+        const { id } = req.params; 
+        const { status } = req.body;   
+        const loggedInUser = req.user;
 
         const allowedStatus = ["approved", "rejected", "blocked", "pending"];
 
@@ -150,9 +151,16 @@ export const updateUserApprovalStatus = async (req, res) => {
             });
         }
 
-        // Check user exists
+        // Prevent self status change
+        if (loggedInUser.id == id) {
+            return res.status(403).json({
+                message: "You cannot change your own status"
+            });
+        }
+
+        // Get target user
         const [userRows] = await pool.query(
-            "SELECT id, name, email, status FROM users WHERE id = ?",
+            "SELECT id, role, status FROM users WHERE id = ?",
             [id]
         );
 
@@ -160,7 +168,16 @@ export const updateUserApprovalStatus = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Update only status
+        const targetUser = userRows[0];
+
+        // Prevent changing Admin status
+        if (targetUser.role.toLowerCase() === "admin") {
+            return res.status(403).json({
+                message: "Admin status cannot be modified"
+            });
+        }
+
+        // Update status
         await pool.query(
             "UPDATE users SET status = ? WHERE id = ?",
             [status, id]
