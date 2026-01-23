@@ -1,5 +1,28 @@
 import { pool } from "../config/db.js";
 
+
+// GET ALL PERMISSIONS
+export const getAllPermissions = async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            "SELECT id, name FROM permissions ORDER BY name ASC"
+        );
+
+        res.status(200).json({
+            success: true,
+            count: rows.length,
+            permissions: rows,
+        });
+    } catch (error) {
+        console.error("Get Permissions Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch permissions",
+        });
+    }
+};
+
+
 /**
  * @desc    Get a role with its permissions
  * @route   GET /api/roles/:id/permissions
@@ -36,6 +59,7 @@ export const getRolePermissions = async (req, res) => {
     }
 };
 
+
 /**
  * @desc    Update role's permissions
  * @route   PUT /api/roles/:id/permissions
@@ -44,6 +68,8 @@ export const updateRolePermissions = async (req, res) => {
     try {
         const { id } = req.params;
         const { permissionIds } = req.body;
+
+        // console.log(id, permissionIds)
 
         if (!Array.isArray(permissionIds)) {
             return res.status(400).json({ message: "permissionIds must be an array" });
@@ -57,7 +83,7 @@ export const updateRolePermissions = async (req, res) => {
 
         const roleName = roleRows[0].name.toLowerCase();
 
-        if (roleName === "admin" || roleName === "user") {
+        if (roleName === "admin") {
             return res.status(403).json({ message: `Cannot update permissions for '${roleName}' role` });
         }
 

@@ -279,7 +279,7 @@ const Sidebar = () => {
                         </ul>
                     </li>
                 )}
-                
+
                 {canSecondary && (
                     <li>
                         <NavLink to="/secondary-source" className={linkClass}>
@@ -363,13 +363,14 @@ const Sidebar = () => {
                     </li>
                 )}
 
-                {/* Always visible */}
-                <li>
-                    <NavLink to="/profile" className={linkClass}>
-                        <FaRegUserCircle className="w-5 h-5" />
-                        Profile
-                    </NavLink>
-                </li>
+                {hasPermission("Profile") && (
+                    <li>
+                        <NavLink to="/profile" className={linkClass}>
+                            <FaRegUserCircle className="w-5 h-5" />
+                            Profile
+                        </NavLink>
+                    </li>
+                )}
             </ul>
 
             {/* Always visible */}
