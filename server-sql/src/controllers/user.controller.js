@@ -135,3 +135,64 @@ export const updateUserProfile = async (req, res) => {
     }
 };
 
+
+// Update User Approval Status
+export const updateUserApprovalStatus = async (req, res) => {
+    try {
+        const { id } = req.params;              // user id
+        const { status } = req.body;           // approved / rejected / blocked
+
+        const allowedStatus = ["approved", "rejected", "blocked", "pending"];
+
+        if (!allowedStatus.includes(status)) {
+            return res.status(400).json({
+                message: "Invalid status. Allowed: approved, rejected, blocked, pending"
+            });
+        }
+
+        // Check user exists
+        const [userRows] = await pool.query(
+            "SELECT id, name, email, status FROM users WHERE id = ?",
+            [id]
+        );
+
+        if (!userRows.length) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update only status
+        await pool.query(
+            "UPDATE users SET status = ? WHERE id = ?",
+            [status, id]
+        );
+
+        res.status(200).json({
+            message: `User status updated to '${status}' successfully`,
+            userId: id,
+            newStatus: status
+        });
+
+    } catch (error) {
+        console.error("USER APPROVAL UPDATE ERROR:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+// get all users with (Username, Name, Email, Role, Status)
+export const getAllUsers = async (req, res) => {
+    try {
+        const [users] = await pool.query(`
+            SELECT id, username, name, email, role, status
+            FROM users
+        `);
+
+        res.status(200).json({
+            message: "Users retrieved successfully",
+            users: users
+        });
+    } catch (error) {
+        console.error("GET ALL USERS ERROR:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

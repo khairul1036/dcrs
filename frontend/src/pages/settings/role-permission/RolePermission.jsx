@@ -120,7 +120,7 @@ const RolePermission = () => {
 
             // FIXED: Now sending permissionIds (array of numbers)
             await axiosSecure.put(`/role-permissions/${selectedRoleId}/permissions`, {
-                permissionIds: selectedPermissionIds, 
+                permissionIds: selectedPermissionIds,
             });
 
             // Refresh from database
