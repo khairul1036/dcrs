@@ -46,30 +46,6 @@ export const AuthProvider = ({ children }) => {
         return res.data;
     };
 
-
-
-
-
-
-    // -------
-    // Permission checkers
-    const hasPermission = (permission) => {
-        if (!user || !Array.isArray(user.permissions)) return false;
-        return user.permissions.includes(permission);
-    };
-
-    const hasAnyPermission = (permissionsArray) => {
-        if (!user || !Array.isArray(user.permissions)) return false;
-        return permissionsArray.some(perm => user.permissions.includes(perm));
-    };
-    //--------
-
-
-
-
-
-
-
     // Login 
     const login = async ({ phoneNumber, password }) => {
         const res = await axios.post(`${API_URL}/auth/login`, { phoneNumber, password });
@@ -93,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, register, logout, hasPermission, hasAnyPermission }}>
+        <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
             {children}
         </AuthContext.Provider>
     );

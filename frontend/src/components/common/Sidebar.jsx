@@ -1,9 +1,6 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import {
-    IoIosArrowDown,
-    IoIosArrowForward,
-} from "react-icons/io";
+import { Link, NavLink } from "react-router-dom";
+import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
 import { GoHome } from "react-icons/go";
 import { LuNotepadText, LuDatabase } from "react-icons/lu";
 import {
@@ -28,12 +25,17 @@ import {
 import { useAuth } from "../../providers/AuthProvider";
 
 const Sidebar = () => {
-    const { logout, hasPermission } = useAuth();
+    const { logout, user } = useAuth();
+    const permissions = user?.user?.permissions || [];
+
     const [openMenu, setOpenMenu] = useState(null);
 
     const toggleMenu = (menu) => {
         setOpenMenu(openMenu === menu ? null : menu);
     };
+
+    const hasPermission = (perm) => permissions.includes(perm);
+    const hasAnyPermission = (list) => list.some(hasPermission);
 
     const submenuClass = (menu) =>
         `pl-12 mt-2 space-y-2 overflow-hidden transition-all duration-300 ${openMenu === menu ? "max-h-96" : "max-h-0"
@@ -47,73 +49,73 @@ const Sidebar = () => {
         `flex items-center gap-2 px-4 py-2 rounded-lg transition ${isActive ? "bg-[#035555]" : "hover:bg-[#035555]"
         }`;
 
-    // ─────────────────────────────────────────────
-    //  Permission checks for each section / item
-    // ─────────────────────────────────────────────
+    // ───────────────────────────────────────────────
+    //  Permission checks
+    // ───────────────────────────────────────────────
+    const canAddData = hasAnyPermission(["Add Data", "Import Data"]);
+    const canViewData = hasAnyPermission(["View Data", "Export Data", "Delete Data", "Edit Data"]);
 
-    // Basic / always visible (or very common)
-    const canDashboard = true; // or hasPermission("Dashboard") if you add it
-    const canAddData = hasPermission("Add Data");
-    const canViewData = hasPermission("View Data");
+    const canExperimental = hasAnyPermission([
+        "Dataset Create",
+        "Dataset View",
+        "Dataset Edit",
+        "Dataset Delete",
+        "Dataset Share",
+    ]);
 
-    // Experimental Data section
-    const canExperimental =
-        hasPermission("Dataset Create") ||
-        hasPermission("Dataset View") || // assuming "Dataset View" covers manage/explore
-        hasPermission("Dataset Edit") ||
-        hasPermission("Dataset Delete");
+    const canSurvey = hasAnyPermission([
+        "Growth Stage Add",
+        "Disease Survey Add",
+        "Insect Survey Add",
+        "Questionnaire Survey Add",
+        "Survey Submit",
+        "Survey View",
+    ]);
 
-    // Survey section
-    const canSurvey =
-        hasPermission("Growth Stage Add") || hasPermission("Growth Stage Edit") ||
-        hasPermission("Disease Survey Add") || hasPermission("Disease Survey Edit") ||
-        hasPermission("Insect Survey Add") || hasPermission("Insect Survey Edit") ||
-        hasPermission("Questionnaire Survey Add") ||
-        hasPermission("Survey Submit") ||
-        hasPermission("Survey View");
+    const canVisualization = hasAnyPermission([
+        "Climate Visualization",
+        "Survey Responses",
+        "Reports",
+    ]);
 
-    // Data Visualization
-    const canVisualization =
-        hasPermission("Climate Visualization") ||
-        hasPermission("Survey Responses") ||
-        hasPermission("Reports"); // if Hazard Calendar belongs here
+    const canSecondary = hasAnyPermission([
+        "Secondary Source View",
+        "Secondary Source Request",
+    ]);
 
-    // Others
-    const canSecondary = hasPermission("Secondary Source View");
-    const canAbout = true; // usually public
-    const canSettings =
-        hasPermission("User Approval") ||
-        hasPermission("User Edit") ||
-        hasPermission("Data Access Requests") ||
-        hasPermission("Change Password") ||
-        hasPermission("Roles") ||
-        hasPermission("Permissions") ||
-        hasPermission("Settings");
-
-    const canProfile = hasPermission("Profile") || true;
+    const canSettings = hasAnyPermission([
+        "User Approval",
+        "User Edit",
+        "User Delete",
+        "Roles",
+        "Permissions",
+        "Change Password",
+        "Data Access Requests",
+        "Data Access Approve",
+        "Data Access Reject",
+    ]);
 
     return (
         <div className="h-screen w-72 bg-[#026666] text-white flex flex-col z-50">
             {/* Logo */}
             <div className="flex flex-col items-center py-6">
-                <img src="/logo.png" alt="Logo" className="w-16" />
-                <h1 className="font-bold text-lg mt-2">BRRI</h1>
+                <Link to="/">
+                    <img src="/logo.png" alt="Logo" className="w-16" />
+                    <h1 className="font-bold text-lg mt-2">BRRI</h1>
+                </Link>
             </div>
 
             <hr className="border-gray-400 mx-4" />
 
             <ul className="flex-1 overflow-y-auto px-2 space-y-2 mt-4 scrollbar-hide">
-                {/* Dashboard */}
-                {canDashboard && (
-                    <li>
-                        <NavLink to="/" className={linkClass}>
-                            <GoHome className="w-5 h-5" />
-                            Dashboard
-                        </NavLink>
-                    </li>
-                )}
+                {/* Always visible */}
+                <li>
+                    <NavLink to="/" className={linkClass}>
+                        <GoHome className="w-5 h-5" />
+                        Dashboard
+                    </NavLink>
+                </li>
 
-                {/* Add Data */}
                 {canAddData && (
                     <li>
                         <NavLink to="/add-data" className={linkClass}>
@@ -123,7 +125,6 @@ const Sidebar = () => {
                     </li>
                 )}
 
-                {/* View Data */}
                 {canViewData && (
                     <li>
                         <NavLink to="/view-data" className={linkClass}>
@@ -133,7 +134,6 @@ const Sidebar = () => {
                     </li>
                 )}
 
-                {/* Experimental Data */}
                 {canExperimental && (
                     <li>
                         <button
@@ -156,7 +156,7 @@ const Sidebar = () => {
                                     </NavLink>
                                 </li>
                             )}
-                            {(hasPermission("Dataset View") || hasPermission("Dataset Edit")) && (
+                            {hasAnyPermission(["Dataset View", "Dataset Edit", "Dataset Delete", "Dataset Share"]) && (
                                 <li>
                                     <NavLink to="/dataset/manage" className={subLinkClass}>
                                         <MdViewList className="w-4 h-4" />
@@ -176,7 +176,6 @@ const Sidebar = () => {
                     </li>
                 )}
 
-                {/* Survey */}
                 {canSurvey && (
                     <li>
                         <button
@@ -191,7 +190,7 @@ const Sidebar = () => {
                         </button>
 
                         <ul className={submenuClass("survey")}>
-                            {(hasPermission("Growth Stage Add") || hasPermission("Growth Stage Edit")) && (
+                            {hasAnyPermission(["Growth Stage Add", "Growth Stage Edit", "Growth Stage Delete"]) && (
                                 <li>
                                     <NavLink to="/survey/growth" className={subLinkClass}>
                                         <FaLeaf className="w-4 h-4" />
@@ -199,7 +198,7 @@ const Sidebar = () => {
                                     </NavLink>
                                 </li>
                             )}
-                            {(hasPermission("Disease Survey Add") || hasPermission("Disease Survey Edit")) && (
+                            {hasAnyPermission(["Disease Survey Add", "Disease Survey Edit", "Disease Survey Delete"]) && (
                                 <li>
                                     <NavLink to="/survey/disease" className={subLinkClass}>
                                         <FaBug className="w-4 h-4" />
@@ -207,7 +206,7 @@ const Sidebar = () => {
                                     </NavLink>
                                 </li>
                             )}
-                            {(hasPermission("Insect Survey Add") || hasPermission("Insect Survey Edit")) && (
+                            {hasAnyPermission(["Insect Survey Add", "Insect Survey Edit", "Insect Survey Delete"]) && (
                                 <li>
                                     <NavLink to="/survey/insect" className={subLinkClass}>
                                         <FaBug className="w-4 h-4" />
@@ -215,7 +214,7 @@ const Sidebar = () => {
                                     </NavLink>
                                 </li>
                             )}
-                            {hasPermission("Climate Incidence Survey") && ( // if you have this perm
+                            {hasPermission("Climate Visualization") && (
                                 <li>
                                     <NavLink to="/survey/climate" className={subLinkClass}>
                                         <FaCloudMoonRain className="w-4 h-4" />
@@ -223,14 +222,18 @@ const Sidebar = () => {
                                     </NavLink>
                                 </li>
                             )}
-                            {(hasPermission("Questionnaire Survey Add") || hasPermission("Questionnaire Survey Edit")) && (
-                                <li>
-                                    <NavLink to="/survey/questionnaire" className={subLinkClass}>
-                                        <LuNotepadText className="w-4 h-4" />
-                                        Questionnaire Survey
-                                    </NavLink>
-                                </li>
-                            )}
+                            {hasAnyPermission([
+                                "Questionnaire Survey Add",
+                                "Questionnaire Survey Edit",
+                                "Questionnaire Survey Delete",
+                            ]) && (
+                                    <li>
+                                        <NavLink to="/survey/questionnaire" className={subLinkClass}>
+                                            <LuNotepadText className="w-4 h-4" />
+                                            Questionnaire Survey
+                                        </NavLink>
+                                    </li>
+                                )}
                             {hasPermission("Survey Submit") && (
                                 <li>
                                     <NavLink to="/survey/submit" className={subLinkClass}>
@@ -243,7 +246,6 @@ const Sidebar = () => {
                     </li>
                 )}
 
-                {/* Data Visualization */}
                 {canVisualization && (
                     <li>
                         <button
@@ -277,8 +279,7 @@ const Sidebar = () => {
                         </ul>
                     </li>
                 )}
-
-                {/* Secondary Source */}
+                
                 {canSecondary && (
                     <li>
                         <NavLink to="/secondary-source" className={linkClass}>
@@ -288,17 +289,14 @@ const Sidebar = () => {
                     </li>
                 )}
 
-                {/* About */}
-                {canAbout && (
-                    <li>
-                        <NavLink to="/about" className={linkClass}>
-                            <CiWarning className="w-5 h-5" />
-                            About
-                        </NavLink>
-                    </li>
-                )}
+                {/* Always visible */}
+                <li>
+                    <NavLink to="/about" className={linkClass}>
+                        <CiWarning className="w-5 h-5" />
+                        About
+                    </NavLink>
+                </li>
 
-                {/* Settings */}
                 {canSettings && (
                     <li>
                         <button
@@ -316,23 +314,23 @@ const Sidebar = () => {
                             {hasPermission("User Approval") && (
                                 <li>
                                     <NavLink to="/user-approval" className={subLinkClass}>
-                                        <FaUsers className="w-4 h-4" />
+                                        <FaUsers className="w-5 h-5" />
                                         User Approval
                                     </NavLink>
                                 </li>
                             )}
-                            {hasPermission("User Edit") && (
+                            {hasAnyPermission(["User Edit", "User List"]) && (
                                 <li>
                                     <NavLink to="/change-user-details" className={subLinkClass}>
-                                        <FaUsers className="w-4 h-4" />
+                                        <FaUsers className="w-5 h-5" />
                                         Change User Details
                                     </NavLink>
                                 </li>
                             )}
-                            {hasPermission("Data Access Requests") && (
+                            {hasAnyPermission(["Data Access Requests", "Data Access Approve", "Data Access Reject"]) && (
                                 <li>
                                     <NavLink to="/data-access-requests" className={subLinkClass}>
-                                        <FaUsers className="w-4 h-4" />
+                                        <FaUsers className="w-5 h-5" />
                                         Secondary Source Requests
                                     </NavLink>
                                 </li>
@@ -340,7 +338,7 @@ const Sidebar = () => {
                             {hasPermission("Change Password") && (
                                 <li>
                                     <NavLink to="/update-password" className={subLinkClass}>
-                                        <FaUsers className="w-4 h-4" />
+                                        <FaUsers className="w-5 h-5" />
                                         Change Password
                                     </NavLink>
                                 </li>
@@ -348,7 +346,7 @@ const Sidebar = () => {
                             {hasPermission("Roles") && (
                                 <li>
                                     <NavLink to="/roles" className={subLinkClass}>
-                                        <FaUsers className="w-4 h-4" />
+                                        <FaUsers className="w-5 h-5" />
                                         Role
                                     </NavLink>
                                 </li>
@@ -356,7 +354,7 @@ const Sidebar = () => {
                             {hasPermission("Permissions") && (
                                 <li>
                                     <NavLink to="/role-permission" className={subLinkClass}>
-                                        <FaUsers className="w-4 h-4" />
+                                        <FaUsers className="w-5 h-5" />
                                         Role Permission
                                     </NavLink>
                                 </li>
@@ -365,18 +363,16 @@ const Sidebar = () => {
                     </li>
                 )}
 
-                {/* Profile */}
-                {canProfile && (
-                    <li>
-                        <NavLink to="/profile" className={linkClass}>
-                            <FaRegUserCircle className="w-5 h-5" />
-                            Profile
-                        </NavLink>
-                    </li>
-                )}
+                {/* Always visible */}
+                <li>
+                    <NavLink to="/profile" className={linkClass}>
+                        <FaRegUserCircle className="w-5 h-5" />
+                        Profile
+                    </NavLink>
+                </li>
             </ul>
 
-            {/* Logout – usually always visible */}
+            {/* Always visible */}
             <div className="px-4 py-4">
                 <button
                     onClick={logout}

@@ -3,31 +3,32 @@ import { pool } from "../config/db.js";
 // Get User Profile
 export const getUserProfile = async (req, res) => {
     try {
-        // get user in on JWT middleware
         const userId = req.user.id;
 
-        // -------- Fetch user from DB --------
+        // -------- Fetch user --------
         const [rows] = await pool.query(
-            `SELECT username,
-            name,
-            email,
-            role,
-            designation,
-            division,
-            whatsapp,
-            status,
-            block,
-            region,
-            district,
-            upazila,
-            unionName,
-            latitude,
-            longitude,
-            hotspot,
-            locationDivision,
-            roleId
-        FROM users
-        WHERE id = ?`,
+            `SELECT 
+                u.id,
+                u.username,
+                u.name,
+                u.email,
+                u.role,
+                u.designation,
+                u.division,
+                u.whatsapp,
+                u.status,
+                u.block,
+                u.region,
+                u.district,
+                u.upazila,
+                u.unionName,
+                u.latitude,
+                u.longitude,
+                u.hotspot,
+                u.locationDivision,
+                u.roleId
+            FROM users u
+            WHERE u.id = ?`,
             [userId]
         );
 
@@ -37,10 +38,25 @@ export const getUserProfile = async (req, res) => {
 
         const user = rows[0];
 
+        // -------- Fetch permissions based on roleId --------
+        const [permissionRows] = await pool.query(
+            `SELECT p.id, p.name
+             FROM permissions p
+             JOIN role_permissions rp ON rp.permissionId = p.id
+             WHERE rp.roleId = ?`,
+            [user.roleId]
+        );
+
+        const permissions = permissionRows.map(p => p.name);
+
+        // attach permissions
+        user.permissions = permissions;
+
         res.status(200).json({
             message: "User profile fetched successfully",
             user,
         });
+
     } catch (error) {
         console.error("GET USER PROFILE ERROR:", error);
         res.status(500).json({ message: "Internal server error" });
