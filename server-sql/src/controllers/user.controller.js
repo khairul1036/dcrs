@@ -136,11 +136,29 @@ export const updateUserProfile = async (req, res) => {
 };
 
 
+// get all users with (Username, Name, Email, Role, Status)
+export const getAllUsers = async (req, res) => {
+    try {
+        const [users] = await pool.query(`
+            SELECT id, username, name, email, phoneNumber, role, status
+            FROM users
+        `);
+
+        res.status(200).json({
+            message: "Users retrieved successfully",
+            users: users
+        });
+    } catch (error) {
+        console.error("GET ALL USERS ERROR:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 // Update User Approval Status
 export const updateUserApprovalStatus = async (req, res) => {
     try {
-        const { id } = req.params; 
-        const { status } = req.body;   
+        const { id } = req.params;
+        const { status } = req.body;
         const loggedInUser = req.user;
 
         const allowedStatus = ["approved", "rejected", "blocked", "pending"];
@@ -195,21 +213,143 @@ export const updateUserApprovalStatus = async (req, res) => {
     }
 };
 
+// Update user details
 
-// get all users with (Username, Name, Email, Role, Status)
-export const getAllUsers = async (req, res) => {
+export const updateUserDetails = async (req, res) => {
     try {
-        const [users] = await pool.query(`
-            SELECT id, username, name, email, role, status
-            FROM users
-        `);
+        const { id } = req.params;
+        const loggedInUser = req.user;
+        const updates = { ...req.body };
+
+        // Get target user
+        const [userRows] = await pool.query(
+            "SELECT id, role, roleId FROM users WHERE id = ?",
+            [id]
+        );
+
+        if (!userRows.length) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const targetUser = userRows[0];
+
+        // Non-admin restrictions
+        if (loggedInUser.role.toLowerCase() !== "admin") {
+            if ("username" in updates || "phoneNumber" in updates) {
+                return res.status(403).json({
+                    message: "You cannot update username or phone number",
+                });
+            }
+
+            if ("role" in updates || "roleId" in updates) {
+                return res.status(403).json({
+                    message: "You cannot change role",
+                });
+            }
+
+            if (loggedInUser.id !== targetUser.id) {
+                return res.status(403).json({
+                    message: "You cannot update other users",
+                });
+            }
+        }
+
+        // If role is being updated → fetch roleId automatically
+        if (updates.role) {
+            const [roleRows] = await pool.query(
+                "SELECT id FROM roles WHERE name = ?",
+                [updates.role]
+            );
+
+            if (!roleRows.length) {
+                return res.status(400).json({ message: "Invalid role name" });
+            }
+
+            updates.roleId = roleRows[0].id; // sync roleId
+        }
+
+        // Prevent manual roleId mismatch
+        if (updates.roleId && !updates.role) {
+            return res.status(400).json({
+                message: "RoleId cannot be updated directly. Provide role name.",
+            });
+        }
+
+        // Build update query
+        const fields = [];
+        const values = [];
+
+        for (const [key, value] of Object.entries(updates)) {
+            fields.push(`${key} = ?`);
+            values.push(value);
+        }
+
+        if (fields.length === 0) {
+            return res.status(400).json({ message: "No valid fields to update" });
+        }
+
+        values.push(id);
+
+        const query = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+
+        await pool.query(query, values);
 
         res.status(200).json({
-            message: "Users retrieved successfully",
-            users: users
+            message: "User details updated successfully",
+            updatedFields: Object.keys(updates)
         });
+
     } catch (error) {
-        console.error("GET ALL USERS ERROR:", error);
+        console.error("UPDATE USER DETAILS ERROR:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// delete user 
+export const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;        // target user id
+        const loggedInUser = req.user;    // from JWT
+
+        // Get target user
+        const [userRows] = await pool.query(
+            "SELECT id, role FROM users WHERE id = ?",
+            [id]
+        );
+
+        if (!userRows.length) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const targetUser = userRows[0];
+
+        // Admin cannot delete other roles
+        if (
+            loggedInUser.role.toLowerCase() === "admin" &&
+            targetUser.role.toLowerCase() !== "admin"
+        ) {
+            return res.status(403).json({
+                message: "Admin cannot delete users of other roles"
+            });
+        }
+
+        // Optional: prevent self delete
+        if (loggedInUser.id == id) {
+            return res.status(403).json({
+                message: "You cannot delete your own account"
+            });
+        }
+
+        // Delete user
+        await pool.query("DELETE FROM users WHERE id = ?", [id]);
+
+        res.status(200).json({
+            message: "User deleted successfully",
+            deletedUserId: id
+        });
+
+    } catch (error) {
+        console.error("DELETE USER ERROR:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
