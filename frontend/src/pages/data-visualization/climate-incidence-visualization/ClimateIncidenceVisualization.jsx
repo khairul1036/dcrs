@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ClimateHazardMap from './ClimateHazardMap';
+import Statistics from './Statistics';
+import HazardAnalyticsDashboard from './HazardAnalyticsDashboard';
 
 const ClimateIncidenceVisualization = () => {
+
+    const [selectedDistrict, setSelectedDistrict] = useState('');
+
     return (
         <div>
-            ClimateIncidenceVisualization
+            <Statistics />
+            <ClimateHazardMap selectedDistrict={selectedDistrict}
+                setSelectedDistrict={setSelectedDistrict} />
+            <HazardAnalyticsDashboard selectedDistrict={selectedDistrict} />
         </div>
     );
 };

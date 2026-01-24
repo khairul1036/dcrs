@@ -20,6 +20,7 @@ import RolePermission from "../pages/settings/role-permission/RolePermission";
 import SurveyResponses from "../pages/data-visualization/view-survey-responses/SurveyResponses";
 import ViewSurveyResponse from "../pages/data-visualization/view-survey-responses/ViewSurveyResponse";
 import PrivateRoute from "./PrivateRoute";
+import ClimateIncidenceVisualization from "../pages/data-visualization/climate-incidence-visualization/ClimateIncidenceVisualization";
 
 const router = createBrowserRouter([
     {
@@ -69,6 +70,10 @@ const router = createBrowserRouter([
             {
                 path: "/survey-response/:id",
                 element: <ViewSurveyResponse />
+            },
+            {
+                path: "/hazard-calendar",
+                element: <ClimateIncidenceVisualization />
             },
 
 
