@@ -1,18 +1,222 @@
 import { pool } from "../config/db.js";
 
 /* ================= CREATE CLIMATE INCIDENT SURVEY ================= */
+// export const createClimateIncidentSurvey = async (req, res) => {
+//     const data = req.body;
+
+//     const connection = await pool.getConnection();
+
+//     try {
+//         await connection.beginTransaction();
+
+//         // 1️⃣ Insert into main survey table
+//         const [surveyResult] = await connection.query(
+//             `INSERT INTO surveys 
+//             (respondentType, respondentName, designation, organization, address, mobileNumber, email, year, hotspot, region, division, district, upazila, unionName, block, cropDamage)
+//             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+//             [
+//                 data.respondentType,
+//                 data.respondentName,
+//                 data.designation,
+//                 data.organization,
+//                 data.address,
+//                 data.mobileNumber,
+//                 data.email,
+//                 data.year,
+//                 data.hotspot,
+//                 data.region,
+//                 data.division,
+//                 data.district,
+//                 data.upazila,
+//                 data.union,
+//                 data.block,
+//                 data.cropDamage
+//             ]
+//         );
+
+//         const surveyId = surveyResult.insertId; // ✅ auto-increment ID
+
+//         // 2️⃣ Insert selected hazards
+//         if (data.selectedHazards && data.selectedHazards.length > 0) {
+//             const hazardsValues = data.selectedHazards.map(h => [surveyId, h.id, h.name]);
+//             await connection.query(
+//                 `INSERT INTO survey_selected_hazards (surveyId, hazardId, hazardName) VALUES ?`,
+//                 [hazardsValues]
+//             );
+//         }
+
+//         // 3️⃣ Insert hazard calendar
+//         if (data.hazardCalendar && data.hazardCalendar.length > 0) {
+//             const calendarValues = [];
+//             data.hazardCalendar.forEach(h => {
+//                 h.monthlyData.forEach(m => {
+//                     calendarValues.push([surveyId, h.id, h.name, m.month, m.monthIndex, m.severity]);
+//                 });
+//             });
+
+//             await connection.query(
+//                 `INSERT INTO survey_hazard_calendar (surveyId, hazardId, hazardName, month, monthIndex, severity) VALUES ?`,
+//                 [calendarValues]
+//             );
+//         }
+
+//         // 4️⃣ Insert hazard seasons
+//         if (data.hazardSeasons && data.hazardSeasons.length > 0) {
+//             const seasonValues = data.hazardSeasons.map(h => [
+//                 surveyId,
+//                 h.id,
+//                 h.name,
+//                 !!h.seasons.Aus,
+//                 !!h.seasons.Aman,
+//                 !!h.seasons.Boro
+//             ]);
+
+//             await connection.query(
+//                 `INSERT INTO survey_hazard_seasons (surveyId, hazardId, hazardName, aus, aman, boro) VALUES ?`,
+//                 [seasonValues]
+//             );
+//         }
+
+//         // 5️⃣ Insert most dangerous hazard (surveyId UNIQUE)
+//         if (data.mostDangerousHazard) {
+//             const mdh = data.mostDangerousHazard;
+//             await connection.query(
+//                 `INSERT INTO survey_most_dangerous_hazard (surveyId, hazardId, hazardName, dangerRating) VALUES (?, ?, ?, ?)`,
+//                 [surveyId, mdh.id, mdh.name, mdh.dangerRating]
+//             );
+//         }
+
+//         await connection.commit();
+
+//         res.status(201).json({ message: 'Survey created successfully', surveyId });
+//     } catch (error) {
+//         await connection.rollback();
+
+//         // Handle duplicate key error gracefully
+//         if (error.code === 'ER_DUP_ENTRY') {
+//             return res.status(400).json({ message: 'Duplicate entry detected', error });
+//         }
+
+//         console.error(error);
+//         res.status(500).json({ message: 'Internal server error', error });
+//     } finally {
+//         connection.release();
+//     }
+// };
+
+
+// GET ALL SURVEYS with pagination
+// export const createClimateIncidentSurvey = async (req, res) => {
+//     const data = req.body;
+//     const connection = await pool.getConnection();
+
+//     try {
+//         await connection.beginTransaction();
+
+//         const [surveyResult] = await connection.query(
+//             `INSERT INTO surveys 
+//             (respondentType, respondentName, designation, organization, address,
+//              mobileNumber, email, year, hotspot, region, division, district,
+//              upazila, unionName, block, cropDamage)
+//             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+//             [
+//                 data.respondentType,
+//                 data.respondentName,
+//                 data.designation,
+//                 data.organization,
+//                 data.address,
+//                 data.mobileNumber,
+//                 data.email,
+//                 data.year,
+//                 data.hotspot,
+//                 data.region,
+//                 data.division,
+//                 data.district,
+//                 data.upazila,
+//                 data.union,
+//                 data.block,
+//                 data.cropDamage ? JSON.stringify(data.cropDamage) : null
+//             ]
+//         );
+
+//         const surveyId = surveyResult.insertId;
+
+//         if (data.selectedHazards?.length) {
+//             const values = data.selectedHazards.map(h => [surveyId, h.id, h.name]);
+//             await connection.query(
+//                 `INSERT INTO survey_selected_hazards (surveyId, hazardId, hazardName) VALUES ?`,
+//                 [values]
+//             );
+//         }
+
+//         if (data.hazardCalendar?.length) {
+//             const values = [];
+//             data.hazardCalendar.forEach(h =>
+//                 h.monthlyData.forEach(m =>
+//                     values.push([surveyId, h.id, h.name, m.month, m.monthIndex, m.severity])
+//                 )
+//             );
+
+//             await connection.query(
+//                 `INSERT INTO survey_hazard_calendar 
+//                  (surveyId, hazardId, hazardName, month, monthIndex, severity)
+//                  VALUES ?`,
+//                 [values]
+//             );
+//         }
+
+//         if (data.hazardSeasons?.length) {
+//             const values = data.hazardSeasons.map(h => [
+//                 surveyId,
+//                 h.id,
+//                 h.name,
+//                 !!h.seasons?.Aus,
+//                 !!h.seasons?.Aman,
+//                 !!h.seasons?.Boro
+//             ]);
+
+//             await connection.query(
+//                 `INSERT INTO survey_hazard_seasons 
+//                  (surveyId, hazardId, hazardName, aus, aman, boro)
+//                  VALUES ?`,
+//                 [values]
+//             );
+//         }
+
+//         if (data.mostDangerousHazard) {
+//             const mdh = data.mostDangerousHazard;
+//             await connection.query(
+//                 `INSERT INTO survey_most_dangerous_hazard 
+//                  (surveyId, hazardId, hazardName, dangerRating)
+//                  VALUES (?, ?, ?, ?)`,
+//                 [surveyId, mdh.id, mdh.name, mdh.dangerRating ?? 1]
+//             );
+//         }
+
+//         await connection.commit();
+//         res.status(201).json({ message: "Survey created successfully", surveyId });
+//     } catch (error) {
+//         await connection.rollback();
+//         console.error(error);
+//         res.status(500).json({ message: "Internal server error", error });
+//     } finally {
+//         connection.release();
+//     }
+// };
+
 export const createClimateIncidentSurvey = async (req, res) => {
     const data = req.body;
-
     const connection = await pool.getConnection();
 
     try {
         await connection.beginTransaction();
 
-        // 1️⃣ Insert into main survey table
+        /* 1️⃣ surveys */
         const [surveyResult] = await connection.query(
             `INSERT INTO surveys 
-            (respondentType, respondentName, designation, organization, address, mobileNumber, email, year, hotspot, region, division, district, upazila, unionName, block, cropDamage)
+            (respondentType, respondentName, designation, organization, address,
+             mobileNumber, email, year, hotspot, region, division, district,
+             upazila, unionName, block, cropDamage)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 data.respondentType,
@@ -30,82 +234,130 @@ export const createClimateIncidentSurvey = async (req, res) => {
                 data.upazila,
                 data.union,
                 data.block,
-                data.cropDamage
+                data.cropDamage ? JSON.stringify(data.cropDamage) : null
             ]
         );
 
-        const surveyId = surveyResult.insertId; // ✅ auto-increment ID
+        const surveyId = surveyResult.insertId;
 
-        // 2️⃣ Insert selected hazards
-        if (data.selectedHazards && data.selectedHazards.length > 0) {
-            const hazardsValues = data.selectedHazards.map(h => [surveyId, h.id, h.name]);
+        /* 2️⃣ selected hazards */
+        let surveyHazardMap = {}; // hazardId -> survey_selected_hazards.id
+
+        if (data.selectedHazards?.length) {
+            for (const h of data.selectedHazards) {
+                const [result] = await connection.query(
+                    `INSERT INTO survey_selected_hazards 
+                     (surveyId, hazardId, hazardName)
+                     VALUES (?, ?, ?)`,
+                    [surveyId, h.id, h.name]
+                );
+
+                surveyHazardMap[h.id] = result.insertId;
+            }
+        }
+
+        /* 3️⃣ hazard calendar */
+        if (data.hazardCalendar?.length) {
+            const values = [];
+            data.hazardCalendar.forEach(h =>
+                h.monthlyData.forEach(m =>
+                    values.push([
+                        surveyId,
+                        h.id,
+                        h.name,
+                        m.month,
+                        m.monthIndex,
+                        m.severity
+                    ])
+                )
+            );
+
             await connection.query(
-                `INSERT INTO survey_selected_hazards (surveyId, hazardId, hazardName) VALUES ?`,
-                [hazardsValues]
+                `INSERT INTO survey_hazard_calendar
+                 (surveyId, hazardId, hazardName, month, monthIndex, severity)
+                 VALUES ?`,
+                [values]
             );
         }
 
-        // 3️⃣ Insert hazard calendar
-        if (data.hazardCalendar && data.hazardCalendar.length > 0) {
-            const calendarValues = [];
-            data.hazardCalendar.forEach(h => {
-                h.monthlyData.forEach(m => {
-                    calendarValues.push([surveyId, h.id, h.name, m.month, m.monthIndex, m.severity]);
-                });
-            });
-
-            await connection.query(
-                `INSERT INTO survey_hazard_calendar (surveyId, hazardId, hazardName, month, monthIndex, severity) VALUES ?`,
-                [calendarValues]
-            );
-        }
-
-        // 4️⃣ Insert hazard seasons
-        if (data.hazardSeasons && data.hazardSeasons.length > 0) {
-            const seasonValues = data.hazardSeasons.map(h => [
+        /* 4️⃣ hazard seasons */
+        if (data.hazardSeasons?.length) {
+            const values = data.hazardSeasons.map(h => [
                 surveyId,
                 h.id,
                 h.name,
-                !!h.seasons.Aus,
-                !!h.seasons.Aman,
-                !!h.seasons.Boro
+                !!h.seasons?.Aus,
+                !!h.seasons?.Aman,
+                !!h.seasons?.Boro
             ]);
 
             await connection.query(
-                `INSERT INTO survey_hazard_seasons (surveyId, hazardId, hazardName, aus, aman, boro) VALUES ?`,
-                [seasonValues]
+                `INSERT INTO survey_hazard_seasons
+                 (surveyId, hazardId, hazardName, aus, aman, boro)
+                 VALUES ?`,
+                [values]
             );
         }
 
-        // 5️⃣ Insert most dangerous hazard (surveyId UNIQUE)
+        /* 5️⃣ most dangerous hazard */
         if (data.mostDangerousHazard) {
             const mdh = data.mostDangerousHazard;
             await connection.query(
-                `INSERT INTO survey_most_dangerous_hazard (surveyId, hazardId, hazardName, dangerRating) VALUES (?, ?, ?, ?)`,
-                [surveyId, mdh.id, mdh.name, mdh.dangerRating]
+                `INSERT INTO survey_most_dangerous_hazard
+                 (surveyId, hazardId, hazardName, dangerRating)
+                 VALUES (?, ?, ?, ?)`,
+                [surveyId, mdh.id, mdh.name, mdh.dangerRating ?? 1]
             );
         }
 
-        await connection.commit();
+        /* 6️⃣ affected crops per hazard 🔥 NEW */
+        if (data.affectedCrops?.length) {
+            const affectedValues = [];
 
-        res.status(201).json({ message: 'Survey created successfully', surveyId });
-    } catch (error) {
-        await connection.rollback();
+            data.affectedCrops.forEach(h => {
+                const surveyHazardId = surveyHazardMap[h.hazardId];
+                if (!surveyHazardId) return;
 
-        // Handle duplicate key error gracefully
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ message: 'Duplicate entry detected', error });
+                h.crops.forEach(crop => {
+                    affectedValues.push([
+                        surveyId,
+                        surveyHazardId,
+                        h.hazardName,
+                        crop.cropId,
+                        crop.cropName,
+                        crop.impact || null,
+                        crop.adoptionPractices || null
+                    ]);
+                });
+            });
+
+            if (affectedValues.length) {
+                await connection.query(
+                    `INSERT INTO survey_hazard_affected_crops
+                     (surveyId, surveyHazardId, hazardName,
+                      cropId, cropName, impact, adoptionPractices)
+                     VALUES ?`,
+                    [affectedValues]
+                );
+            }
         }
 
+        await connection.commit();
+        res.status(201).json({
+            message: "Survey created successfully",
+            surveyId
+        });
+
+    } catch (error) {
+        await connection.rollback();
         console.error(error);
-        res.status(500).json({ message: 'Internal server error', error });
+        res.status(500).json({ message: "Internal server error", error });
     } finally {
         connection.release();
     }
 };
 
 
-// GET ALL SURVEYS with pagination
 export const getAllSurveys = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -402,12 +654,12 @@ export const getDistrictSummary = async (req, res) => {
     try {
         const connection = await pool.getConnection();
 
-        // 1️⃣ Get list of districts with survey count
         const [districtRows] = await connection.query(`
             SELECT 
                 s.district,
                 COUNT(DISTINCT s.id) as surveyCount
             FROM surveys s
+            WHERE s.district IS NOT NULL AND s.district != ''
             GROUP BY s.district
             ORDER BY surveyCount DESC
         `);
@@ -415,9 +667,10 @@ export const getDistrictSummary = async (req, res) => {
         const data = [];
 
         for (let district of districtRows) {
-            const districtName = district.district;
+            const districtName = (district.district || '').trim();
 
-            // 2️⃣ Get all unique hazards for this district
+            if (!districtName) continue; // extra safety
+
             const [hazardRows] = await connection.query(`
                 SELECT DISTINCT sh.hazardName
                 FROM survey_selected_hazards sh
@@ -425,13 +678,19 @@ export const getDistrictSummary = async (req, res) => {
                 WHERE s.district = ?
             `, [districtName]);
 
-            const hazards = hazardRows.map(h => h.hazardName);
-            const hazardCount = hazards.length;
+            const hazards = hazardRows
+                .map(h => h.hazardName)
+                .filter(Boolean);
 
             data.push({
                 district: districtName.toLowerCase(),
-                displayName: districtName.split(' ').map(w => w[0].toUpperCase() + w.slice(1)).join(' '),
-                hazardCount,
+                displayName: districtName
+                    .split(/\s+/)
+                    .map(word =>
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    )
+                    .join(' '),
+                hazardCount: hazards.length,
                 surveyCount: district.surveyCount,
                 hazards
             });
@@ -443,14 +702,18 @@ export const getDistrictSummary = async (req, res) => {
             success: true,
             data,
             count: data.length,
-            filters: {} // you can populate filters if needed
+            filters: {}
         });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Internal server error', error });
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
     }
 };
+
 
 // GET SURVEY STATISTICS
 export const getSurveyStatistics = async (req, res) => {

@@ -1,6 +1,6 @@
 import { pool } from "../config/db.js";
 import seed from "../config/seed.js";
-import { hazardCalendarTableQuery, hazardSeasonsTableQuery, mostDangerousHazardTableQuery, selectedHazardsTableQuery, surveyTableQuery } from "./dbTablequery/climateIncidentSurveys.js";
+import { hazardCalendarTableQuery, hazardSeasonsTableQuery, mostDangerousHazardTableQuery, selectedHazardsTableQuery, surveyTableQuery, affectedCropsTableQuery } from "./dbTablequery/climateIncidentSurveys.js";
 
 
 const userTableQuery = `
@@ -86,6 +86,7 @@ const createAllTables = async () => {
         await createTable("survey_hazard_calendar", hazardCalendarTableQuery);
         await createTable("survey_hazard_seasons", hazardSeasonsTableQuery);
         await createTable("survey_most_dangerous_hazard", mostDangerousHazardTableQuery);
+        await createTable("survey_hazard_affected_crops", affectedCropsTableQuery);
 
 
         // CHECK BEFORE SEED

@@ -4,12 +4,13 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-// Insert full survey JSON
+// Climate Incident Survey Routes
 router.get("/district-summary", getDistrictSummary);
 router.get("/statistics", getSurveyStatistics);
 router.get("/hazard-analytics", getHazardAnalyticsByDistrict);
 
-router.post("/", authenticate, createClimateIncidentSurvey);
+// CRUD Operations for Surveys
+router.post("/", createClimateIncidentSurvey);
 router.get("/", authenticate, getAllSurveys);
 router.get("/:id", authenticate, getSurveyById);
 router.put("/:id", authenticate, updateSurvey);

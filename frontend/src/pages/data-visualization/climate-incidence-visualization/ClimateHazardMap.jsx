@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import axios from 'axios';
+import useAxiosSecure from '../../../hook/useAxiosSecure';
 
 const ClimateHazardMap = ({ selectedDistrict, setSelectedDistrict }) => {
+    const axiosSecure = useAxiosSecure();
     const svgRef = useRef(null);
     const [geoData, setGeoData] = useState(null);
     const [districtSummary, setDistrictSummary] = useState({});
@@ -23,7 +25,7 @@ const ClimateHazardMap = ({ selectedDistrict, setSelectedDistrict }) => {
             .catch(err => setError(err.message));
 
         // District summary API
-        axios.get('https://dcrs.brri.gov.bd/api/climate-visualization/district-summary')
+        axiosSecure.get('/climate-incident-surveys/district-summary')
             .then(res => {
                 if (res.data?.success && Array.isArray(res.data.data)) {
                     const obj = {};

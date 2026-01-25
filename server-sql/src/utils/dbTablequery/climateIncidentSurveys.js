@@ -88,3 +88,22 @@ CREATE TABLE IF NOT EXISTS survey_most_dangerous_hazard (
     FOREIGN KEY (surveyId) REFERENCES surveys(id) ON DELETE CASCADE
 );
 `;
+
+
+// Affected Crops per Hazard
+export const affectedCropsTableQuery = `
+CREATE TABLE IF NOT EXISTS survey_hazard_affected_crops (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    surveyId INT NOT NULL,
+    surveyHazardId INT NOT NULL,   -- points to survey_selected_hazards.id
+    hazardName VARCHAR(255) NOT NULL,
+    
+    cropId VARCHAR(50) NOT NULL,
+    cropName VARCHAR(255) NOT NULL,
+    impact TEXT NULL,
+    adoptionPractices TEXT NULL,
+
+    FOREIGN KEY (surveyId) REFERENCES surveys(id) ON DELETE CASCADE,
+    FOREIGN KEY (surveyHazardId) REFERENCES survey_selected_hazards(id) ON DELETE CASCADE
+);
+`;
