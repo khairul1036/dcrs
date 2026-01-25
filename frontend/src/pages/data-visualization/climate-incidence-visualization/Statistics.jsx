@@ -1,8 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // src/components/Statistics.jsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import useAxiosSecure from '../../../hook/useAxiosSecure';
 
 const Statistics = () => {
+    const axiosSecure = useAxiosSecure();
     const [stats, setStats] = useState({
         totalSurveys: 0,
         uniqueDistricts: 0,
@@ -13,7 +15,7 @@ const Statistics = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        axios.get('https://dcrs.brri.gov.bd/api/climate-visualization/statistics')
+        axiosSecure.get('/climate-incident-surveys/statistics')
             .then(response => {
                 if (response.data?.success && response.data?.data) {
                     setStats(response.data.data);

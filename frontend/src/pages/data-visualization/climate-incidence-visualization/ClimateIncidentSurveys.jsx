@@ -1,6 +1,5 @@
 // climate-incident-surveys.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
     FaEye,        // View
     FaEdit,       // Edit
@@ -8,8 +7,10 @@ import {
     FaChevronLeft,
     FaChevronRight,
 } from 'react-icons/fa';
+import useAxiosSecure from '../../../hook/useAxiosSecure';
 
 const ClimateIncidentSurveys = () => {
+    const axiosSecure = useAxiosSecure();
     const [surveys, setSurveys] = useState([]);
     const [pagination, setPagination] = useState({
         page: 1,
@@ -24,8 +25,8 @@ const ClimateIncidentSurveys = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(
-                `https://dcrs.brri.gov.bd/api/climate-incident-surveys?page=${page}&limit=10`
+            const response = await axiosSecure.get(
+                `/climate-incident-surveys?page=${page}&limit=10`
             );
 
             if (response.data.success) {

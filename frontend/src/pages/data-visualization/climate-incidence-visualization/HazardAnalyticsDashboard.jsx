@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import useAxiosSecure from '../../../hook/useAxiosSecure';
 
 const HazardAnalyticsDashboard = ({ selectedDistrict = '' }) => {
+    const axiosSecure = useAxiosSecure();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const BASE_URL = 'https://dcrs.brri.gov.bd/api/climate-visualization/hazard-analytics';
+    // const BASE_URL = 'https://dcrs.brri.gov.bd/api/climate-visualization/hazard-analytics';
 
     useEffect(() => {
         if (!selectedDistrict) {
@@ -19,7 +20,7 @@ const HazardAnalyticsDashboard = ({ selectedDistrict = '' }) => {
             setLoading(true);
             setError(null);
             try {
-                const response = await axios.get(`${BASE_URL}?district=${encodeURIComponent(selectedDistrict)}`);
+                const response = await axiosSecure.get(`/climate-incident-surveys/hazard-analytics?district=${encodeURIComponent(selectedDistrict)}`);
                 if (response.data.success) {
                     setData(response.data);
                 } else {
@@ -34,6 +35,7 @@ const HazardAnalyticsDashboard = ({ selectedDistrict = '' }) => {
         };
 
         fetchHazardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedDistrict]);
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
