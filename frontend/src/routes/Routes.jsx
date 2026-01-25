@@ -21,6 +21,7 @@ import SurveyResponses from "../pages/data-visualization/view-survey-responses/S
 import ViewSurveyResponse from "../pages/data-visualization/view-survey-responses/ViewSurveyResponse";
 import PrivateRoute from "./PrivateRoute";
 import ClimateIncidenceVisualization from "../pages/data-visualization/climate-incidence-visualization/ClimateIncidenceVisualization";
+import ClimateIncidenceSurvey from "../pages/survey/ClimateIncidenceSurvey";
 
 const router = createBrowserRouter([
     {
@@ -74,6 +75,10 @@ const router = createBrowserRouter([
             {
                 path: "/hazard-calendar",
                 element: <ClimateIncidenceVisualization />
+            },
+            {
+                path: "/climate-incidence-survey",
+                element: <ClimateIncidenceSurvey />
             },
 
 

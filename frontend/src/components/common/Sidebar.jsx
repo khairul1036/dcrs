@@ -216,7 +216,7 @@ const Sidebar = () => {
                             )}
                             {hasPermission("Climate Visualization") && (
                                 <li>
-                                    <NavLink to="/survey/climate" className={subLinkClass}>
+                                    <NavLink to="/climate-incidence-survey" className={subLinkClass}>
                                         <FaCloudMoonRain className="w-4 h-4" />
                                         Climate Incidence Survey
                                     </NavLink>
